@@ -14,5 +14,5 @@ cmds = [
 
 [phases.start]
 cmds = [
-  "npm run start --prefix backend"
+  "cd backend && npm start"
 ]

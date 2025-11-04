@@ -8,7 +8,7 @@
     "start": "npm run start --prefix backend"
   },
   "engines": {
-"node": ">=20 <22"
+"node": ">=20 <23"
   },
   "repository": {
     "type": "git",

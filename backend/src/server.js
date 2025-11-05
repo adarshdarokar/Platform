@@ -1,6 +1,7 @@
 import express from "express";
 import { ENV } from "./lib/env.js";
 import path from "path";
+import { connecDB } from "./lib/db.js";
 
 const app = express();
 const __dirname = path.resolve();
@@ -17,12 +18,23 @@ app.get("/book", (req, res) => {
 if (ENV.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
-app.use( (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
-});
-
+  app.get("/{*any}", (req, res) => {
+    res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
+  });
 }
 
-app.listen(ENV.PORT, () =>
-  console.log("server is running on port:", ENV.PORT)
-);
+app.listen(ENV.PORT, () => {
+  console.log("server is running on port:", ENV.PORT);
+  connecDB();
+});
+
+const startServer = async () => {
+  try {
+    await connecDB();
+    app.listen(ENV.PORT, () => {
+      console.log("server is running on port:", ENV.PORT);
+    });
+  } catch (error) {
+    console.log("💀❌error starting the server:",error)
+  }
+};

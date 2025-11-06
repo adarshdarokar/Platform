@@ -1,4 +1,4 @@
-import {StreamChat, StremaChat} from "stream-chat"
+import { StreamChat } from "stream-chat"
 
 import { ENV } from "./env.js"
 

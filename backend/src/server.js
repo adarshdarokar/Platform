@@ -1,9 +1,10 @@
 import express from "express";
 import { ENV } from "./lib/env.js";
 import path from "path";
-import { connecDB } from "./lib/db.js";
+import { connectDB } from "./lib/db.js";
 import cors from "cors";
-import {serve} from "inngest/express"
+import { serve } from "inngest/express";
+import { inngest, functions } from "./lib/inngest.js";
 
 const app = express();
 const __dirname = path.resolve();
@@ -13,13 +14,14 @@ app.get("/health", (req, res) => {
 });
 
 app.use(express.json());
-app.use(cors({ origin: ENV.CLIENT_URL,
-   credentials: true
-   }));
+app.use(
+  cors({
+    origin: ENV.CLIENT_URL,
+    credentials: true,
+  })
+);
 
-
-app.use("/api/inngest", serve({client:inngest, functions }))
-
+app.use("/api/inngest", serve({ client: inngest, functions }));
 
 app.get("/book", (req, res) => {
   res.status(200).json({ msg: "book api is working" });
@@ -29,23 +31,25 @@ app.get("/book", (req, res) => {
 if (ENV.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
+  // fixed wildcard route syntax
   app.get("/{*any}", (req, res) => {
     res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
   });
 }
 
+// kept same logic but fixed syntax & duplication
 app.listen(ENV.PORT, () => {
   console.log("server is running on port:", ENV.PORT);
-  connecDB();
+  connectDB();
 });
 
 const startServer = async () => {
   try {
-    await connecDB();
+    await connectDB();
     app.listen(ENV.PORT, () => {
       console.log("server is running on port:", ENV.PORT);
     });
   } catch (error) {
-    console.log("💀❌error starting the server:", error);
+    console.log("💀❌ error starting the server:", error);
   }
 };

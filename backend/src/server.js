@@ -31,11 +31,12 @@ app.get("/book", (req, res) => {
 if (ENV.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
-  // fixed wildcard route syntax
-  app.get("*", (req, res) => {
+  // ✅ Express 5 compatible wildcard route
+  app.use((req, res) => {
     res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
   });
 }
+
 
 // kept same logic but fixed syntax & duplication
 

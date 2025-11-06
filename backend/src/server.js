@@ -32,16 +32,12 @@ if (ENV.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
   // fixed wildcard route syntax
-  app.get("/{*any}", (req, res) => {
+  app.get("*", (req, res) => {
     res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
   });
 }
 
 // kept same logic but fixed syntax & duplication
-app.listen(ENV.PORT, () => {
-  console.log("server is running on port:", ENV.PORT);
-  connectDB();
-});
 
 const startServer = async () => {
   try {

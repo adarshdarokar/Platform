@@ -50,3 +50,7 @@ const startServer = async () => {
     console.log("💀❌ error starting the server:", error);
   }
 };
+app.listen(ENV.PORT || 3000, () => {
+  console.log(`✅ Server is running on port ${ENV.PORT || 3000}`);
+});
+

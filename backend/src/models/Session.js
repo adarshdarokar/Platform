@@ -1,37 +1,50 @@
 import mongoose from "mongoose"
 
+// Define the schema for a coding session
 const sessionSchema = new mongoose.Schema({
-    problem:{
-        type:String,
-        required:true
+    // Problem title or name of the question
+    problem: {
+        type: String,
+        required: true
     },
-    difficulty:{
+
+    // Difficulty level of the problem
+    difficulty: {
         type: String,
         enum: ["easy", "medium", "hard"],
         required: true
     },
-    host:{
+
+    // Reference to the host user who created the session
+    host: {
         type: mongoose.Schema.Types.ObjectId,
-         ref:"User",
-         required: true
+        ref: "User",
+        required: true
     },
-    participant:{
+
+    // Reference to the participant user who joined the session (optional)
+    participant: {
         type: mongoose.Schema.Types.ObjectId,
-         ref:"User",
-         default:null
+        ref: "User",
+        default: null
     },
-    status:{
+
+    // Current status of the session (active or completed)
+    status: {
         type: String,
-        enum:["active","completed"],
-        default: "active",
+        enum: ["active", "completed"],
+        default: "active"
     },
-    callId:{
+
+    // Call ID used for identifying the video call or session
+    callId: {
         type: String,
-        default:"",
+        default: ""
     }
 },
-{ timestamps: true }
+{ timestamps: true } // Automatically adds createdAt and updatedAt fields
 )
 
-const session = mongoose.model("Session",sessionSchema)
-export default session;
+// Create and export the model for MongoDB
+const session = mongoose.model("Session", sessionSchema)
+export default session

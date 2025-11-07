@@ -1,32 +1,33 @@
-import { StreamChat } from "stream-chat"
+import { StreamChat } from "stream-chat";
+import { ENV } from "./env.js";
 
-import { ENV } from "./env.js"
+const apiKey = ENV.STREAM_API_KEY;
+const apiSecret = ENV.STREAM_API_SECRET;
 
-const apiKey = ENV.STREAM_API_KEY
-const apiSecret = ENV.STREAM_API_SECRET
-
-
-if(!apiKey || !apiSecret){
-    console.error("stream api is missing")
+if (!apiKey || !apiSecret) {
+  console.error("stream api is missing");
 }
 
-export const chatClient = StreamChat.getInstance(apiKey, apiSecret)
+// ✅ Stream client ek hi instance hona chahiye
+export const chatClient = StreamChat.getInstance(apiKey, apiSecret);
 
-export const upsertStreamUser = async(userData)=>{
-    try {
-        await chatClient.upsertUser(userData)
-        console.log(" stream userted user data successfully:", userData)
-    } catch (error) {
-        console.error("error upserting Stream user:", error)
-    }
-}
+// ❌ streamClient undefined tha — fix kiya (chatClient se hi assign)
+export const streamClient = chatClient;
 
+export const upsertStreamUser = async (userData) => {
+  try {
+    await chatClient.upsertUser(userData);
+    console.log("stream userted user data successfully:", userData);
+  } catch (error) {
+    console.error("error upserting Stream user:", error);
+  }
+};
 
-export const deleteStreamUser = async(userId)=>{
-    try {
-        await chatClient.deleteUser([userId])
-        console.log("stream user deleted successfully:", userId)
-    } catch (error) {
-        console.error("error deleting Stream user:", error)
-    }
-}
+export const deleteStreamUser = async (userId) => {
+  try {
+    await chatClient.deleteUser(userId); // ✅ array hata diya
+    console.log("stream user deleted successfully:", userId);
+  } catch (error) {
+    console.error("error deleting Stream user:", error);
+  }
+};

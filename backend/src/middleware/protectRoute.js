@@ -12,7 +12,7 @@ export const protectRoute = [
 
       const user = await User.findOne({ clerkiId });
 
-      if (!user) return res.status(404).json({ msg: "User nor found" });
+      if (!user) return res.status(404).json({ message: "User nor found" });
       req.user = user;
         
       next();

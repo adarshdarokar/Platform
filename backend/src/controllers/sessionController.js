@@ -1,39 +1,23 @@
-import Session from "../models/Session.js";
 import { chatClient, streamClient } from "../lib/stream.js";
+import Session from "../models/Session.js";
 
-/* 
-=====================================================
-Function: createSession
-Purpose: Creates a new coding session with Stream call & chat channel
-=====================================================
-*/
 export async function createSession(req, res) {
   try {
     const { problem, difficulty } = req.body;
     const userId = req.user._id;
     const clerkId = req.user.clerkId;
 
-    // Validate required fields
     if (!problem || !difficulty) {
-      return res
-        .status(400)
-        .json({ message: "problem and difficulty are required" });
+      return res.status(400).json({ message: "Problem and difficulty are required" });
     }
 
-    // Unique callId for the session
-    const callId = `session_${Date.now()}_${Math.random()
-      .toString(36)
-      .substring(7)}`;
+    // generate a unique call id for stream video
+    const callId = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
-    // Create a new session in MongoDB
-    const session = await Session.create({
-      problem,
-      difficulty,
-      host: userId,
-      callId,
-    });
+    // create session in db
+    const session = await Session.create({ problem, difficulty, host: userId, callId });
 
-    // Create a video call in Stream
+    // create stream video call
     await streamClient.video.call("default", callId).getOrCreate({
       data: {
         created_by_id: clerkId,
@@ -41,7 +25,7 @@ export async function createSession(req, res) {
       },
     });
 
-    // Create a chat channel for the session
+    // chat messaging
     const channel = chatClient.channel("messaging", callId, {
       name: `${problem} Session`,
       created_by_id: clerkId,
@@ -57,16 +41,11 @@ export async function createSession(req, res) {
   }
 }
 
-/* 
-=====================================================
-Function: getActiveSessions
-Purpose: Fetch all currently active sessions
-=====================================================
-*/
 export async function getActiveSessions(_, res) {
   try {
     const sessions = await Session.find({ status: "active" })
       .populate("host", "name profileImage email clerkId")
+      .populate("participant", "name profileImage email clerkId")
       .sort({ createdAt: -1 })
       .limit(20);
 
@@ -77,16 +56,11 @@ export async function getActiveSessions(_, res) {
   }
 }
 
-/* 
-=====================================================
-Function: getMyRecentSessions
-Purpose: Fetch recent sessions completed by the logged-in user
-=====================================================
-*/
 export async function getMyRecentSessions(req, res) {
   try {
     const userId = req.user._id;
 
+    // get sessions where user is either host or participant
     const sessions = await Session.find({
       status: "completed",
       $or: [{ host: userId }, { participant: userId }],
@@ -101,12 +75,6 @@ export async function getMyRecentSessions(req, res) {
   }
 }
 
-/* 
-=====================================================
-Function: getSessionById
-Purpose: Fetch details of a specific session using session ID
-=====================================================
-*/
 export async function getSessionById(req, res) {
   try {
     const { id } = req.params;
@@ -124,12 +92,6 @@ export async function getSessionById(req, res) {
   }
 }
 
-/* 
-=====================================================
-Function: joinSession
-Purpose: Allow a user to join a specific session
-=====================================================
-*/
 export async function joinSession(req, res) {
   try {
     const { id } = req.params;
@@ -137,16 +99,23 @@ export async function joinSession(req, res) {
     const clerkId = req.user.clerkId;
 
     const session = await Session.findById(id);
+
     if (!session) return res.status(404).json({ message: "Session not found" });
 
-    if (session.participant)
-      return res.status(400).json({ message: "Session is full" });
+    if (session.status !== "active") {
+      return res.status(400).json({ message: "Cannot join a completed session" });
+    }
 
-    // Add participant to session
+    if (session.host.toString() === userId.toString()) {
+      return res.status(400).json({ message: "Host cannot join their own session as participant" });
+    }
+
+    // check if session is already full - has a participant
+    if (session.participant) return res.status(409).json({ message: "Session is full" });
+
     session.participant = userId;
     await session.save();
 
-    // Add participant to chat channel
     const channel = chatClient.channel("messaging", session.callId);
     await channel.addMembers([clerkId]);
 
@@ -157,12 +126,6 @@ export async function joinSession(req, res) {
   }
 }
 
-/* 
-=====================================================
-Function: endSession
-Purpose: End a session (only host can end)
-=====================================================
-*/
 export async function endSession(req, res) {
   try {
     const { id } = req.params;
@@ -172,30 +135,28 @@ export async function endSession(req, res) {
 
     if (!session) return res.status(404).json({ message: "Session not found" });
 
-    // Only host can end session
+    // check if user is the host
     if (session.host.toString() !== userId.toString()) {
-      return res.status(403).json({ message: "Only host can end the session" });
+      return res.status(403).json({ message: "Only the host can end the session" });
     }
 
+    // check if session is already completed
     if (session.status === "completed") {
       return res.status(400).json({ message: "Session is already completed" });
     }
 
-    // Update session status to completed
-    session.status = "completed";
-    await session.save();
-
-    // Delete Stream video call
+    // delete stream video call
     const call = streamClient.video.call("default", session.callId);
     await call.delete({ hard: true });
 
-    // Delete chat channel
+    // delete stream chat channel
     const channel = chatClient.channel("messaging", session.callId);
     await channel.delete();
 
-    res
-      .status(200)
-      .json({ session, message: "Session ended successfully" });
+    session.status = "completed";
+    await session.save();
+
+    res.status(200).json({ session, message: "Session ended successfully" });
   } catch (error) {
     console.log("Error in endSession controller:", error.message);
     res.status(500).json({ message: "Internal Server Error" });

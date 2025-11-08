@@ -11,12 +11,12 @@ import {
 
 const router = express.Router();
 
-router.post("/", createSession, createSession);
+router.post("/", protectRoute, createSession);
 router.get("/active", protectRoute, getActiveSessions);
 router.get("/my-recent", protectRoute, getMyRecentSessions);
 
-router.get("/:Id", protectRoute, getSessionById);
-router.get("/:Id/join", protectRoute, joinSession);
+router.get("/:id", protectRoute, getSessionById);
+router.post("/:id/join", protectRoute, joinSession);
 router.post("/:id/end", protectRoute, endSession);
 
 export default router;

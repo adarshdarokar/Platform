@@ -1,29 +1,13 @@
 {
-  "name": "platform",
+  "name": "talent-iq",
   "version": "1.0.0",
-  "description": "",
-  "main": "server.js",
+  "main": "index.js",
   "scripts": {
     "build": "npm install --prefix backend && npm install --prefix frontend && npm run build --prefix frontend",
-    "start": "cd backend && npm install && npm run start"
-  },
-  "engines": {
-    "node": ">=22.11.0 <23"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/adarshdarokar/Platform.git"
+    "start": "npm run start --prefix backend"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/adarshdarokar/Platform/issues"
-  },
-  "homepage": "https://github.com/adarshdarokar/Platform#readme",
-  "dependencies": {
-    "@tailwindcss/vite": "^4.1.17",
-    "tailwindcss": "^4.1.17"
-  }
+  "description": ""
 }
